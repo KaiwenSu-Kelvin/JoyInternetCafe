@@ -1,0 +1,35 @@
+spring:
+  mvc:
+    view:
+      prefix: /WEB-INF/page/
+      suffix: .jsp
+  datasource:
+    url: jdbc:mysql://localhost:3306/joyinternetcafe?useUnicode=true&characterEncoding=utf8
+    username: root
+    password: aaabbb
+    driver-class-name: com.mysql.jdbc.Driver
+  redis:
+    host: 192.168.1.113
+    port: 6379
+  cache:
+    redis:
+      key-prefix: "portal:authCode:"
+
+
+mybatis:
+  mapper-locations: classpath:mybatis-mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  type-aliases-package: com.kelvin.joyinternetcafe.domain
+
+
+pagehelper:
+  helper-dialect: mysql
+  reasonable: true
+  support-methods-arguments: true
+  params: count=countSql
+
+
+jwt:
+  secret: "jwt_secret"

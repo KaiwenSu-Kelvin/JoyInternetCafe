@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.kelvin.joyinternetcafe.mapper.IProductMapper">
+    <select id="selectAllProduct" resultType="Product">
+        select * from product;
+    </select>
+    
+    
+    <update id="updateProduct">
+        update product
+
+        <set>
+            <if test="price != null">
+                price = #{price},
+            </if>
+            <if test="stock != null">
+                stock = #{stock},
+            </if>
+        </set>
+        where id = #{id};
+    </update>
+
+    <insert id="insertNewProduct">
+        insert into product(`name`,price,stock,picture) values(#{name},#{price},#{stock},#{picture});
+    </insert>
+</mapper>

@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.kelvin.joyinternetcafe.mapper.IUsageRecordMapper">
+    <!--用户下机时将usage_record中的end_datetime数据填充-->
+    <update id="updateUsageRecordEndTime" parameterType="int">
+        UPDATE `joyinternetcafe`.`usage_record`
+        SET  `end_datetime` = now()
+        where `uid` = #{uid}
+        and start_datetime =
+        (  SELECT * from (select max(start_datetime) from usage_record where uid = #{uid}) as t1 );
+    </update>
+
+
+    <!--近五个小时的网咖情况-->
+    <!--由于数据问题 假定当前时间为4月1日 晚8点-->
+    <select id="selectUserComeAndLeave" resultType="int" parameterType="String">
+        select IFNULL(b.`count`,0) as count from
+        (
+        SELECT DATE_FORMAT('2020-04-01 20:00:00','%Y年%m月%d日%H时') as some_hours
+        union all
+        SELECT DATE_FORMAT(date_sub('2020-04-01 20:00:00', interval 1 hour),'%Y年%m月%d日%H时') as some_hours
+        union all
+        SELECT DATE_FORMAT(date_sub('2020-04-01 20:00:00', interval 2 hour),'%Y年%m月%d日%H时') as some_hours
+        union all
+        SELECT DATE_FORMAT(date_sub('2020-04-01 20:00:00', interval 3 hour),'%Y年%m月%d日%H时') as some_hours
+        union all
+        SELECT DATE_FORMAT(date_sub('2020-04-01 20:00:00', interval 4 hour),'%Y年%m月%d日%H时') as some_hours
+        union all
+        SELECT DATE_FORMAT(date_sub('2020-04-01 20:00:00', interval 5 hour),'%Y年%m月%d日%H时') as some_hours
+        ) as a
+        LEFT JOIN
+        (
+        select DATE_FORMAT(
+        <if test="action == 'come'">
+            start_datetime
+        </if>
+        <if test="action == 'leave'">
+            end_datetime
+        </if>
+        ,'%Y年%m月%d日%H时') as an_hour,count(*) as `count`
+        from usage_record
+        where start_datetime > DATE_SUB('2020-04-01 20:00:00',interval 5 HOUR)
+        group by an_hour
+        ) as b
+
+        on a.some_hours = b.an_hour
+        ORDER BY a.some_hours;
+    </select>
+
+
+    <!--获取该天的上机记录-->
+    <select id="getSectionBySectionId" resultType="Section">
+        select * from `section` where id = #{section_id};
+    </select>
+    <!--获取该天的上机记录-->
+    <resultMap id="MapForUsageRecord" type="UsageRecord">
+        <id property="id" column="id"></id>
+        <association property="section" column="section_id" select="getSectionBySectionId"></association>
+    </resultMap>
+    <!--获取该天的上机记录-->
+    <select id="selectUsageByDate" resultMap="MapForUsageRecord">
+        select * from usage_record
+        where start_datetime > #{date}
+        and start_datetime &lt; date_sub(#{date}, interval -1 day);
+    </select>
+
+    <!--获取该天的收入-->
+    <select id="selectIncomeByDate" resultType="int">
+        select sum(hours * price) as income
+            from usage_record u INNER JOIN section s
+            on u.section_id = s.id
+            where (start_datetime > '2020-04-01' and start_datetime &lt; date_sub('2020-04-01', interval -1 day));
+    </select>
+
+
+    <!---->
+    <select id="selectRevenueRecord" parameterType="String" resultType="int">
+        select IFNULL(b.count_start,0) as count from
+        (
+        SELECT DATE_FORMAT(DATE_ADD(#{date}, interval 0 hour),'%Y年%m月%d日%H时') as some_hours
+        union all
+        SELECT DATE_FORMAT(DATE_ADD(#{date}, interval 1 hour),'%Y年%m月%d日%H时') as some_hours
+        union all
+        SELECT DATE_FORMAT(DATE_ADD(#{date}, interval 2 hour),'%Y年%m月%d日%H时') as some_hours
+        union all
+        SELECT DATE_FORMAT(DATE_ADD(#{date}, interval 3 hour),'%Y年%m月%d日%H时') as some_hours
+        union all
+        SELECT DATE_FORMAT(DATE_ADD(#{date}, interval 4 hour),'%Y年%m月%d日%H时') as some_hours
+        union all
+        SELECT DATE_FORMAT(DATE_ADD(#{date}, interval 5 hour),'%Y年%m月%d日%H时') as some_hours
+        union all
+        SELECT DATE_FORMAT(DATE_ADD(#{date}, interval 6 hour),'%Y年%m月%d日%H时') as some_hours
+        union all
+        SELECT DATE_FORMAT(DATE_ADD(#{date}, interval 7 hour),'%Y年%m月%d日%H时') as some_hours
+        union all
+        SELECT DATE_FORMAT(DATE_ADD(#{date}, interval 8 hour),'%Y年%m月%d日%H时') as some_hours
+        union all
+        SELECT DATE_FORMAT(DATE_ADD(#{date}, interval 9 hour),'%Y年%m月%d日%H时') as some_hours
+        union all
+        SELECT DATE_FORMAT(DATE_ADD(#{date}, interval 10 hour),'%Y年%m月%d日%H时') as some_hours
+        union all
+        SELECT DATE_FORMAT(DATE_ADD(#{date}, interval 11 hour),'%Y年%m月%d日%H时') as some_hours
+        union all
+        SELECT DATE_FORMAT(DATE_ADD(#{date}, interval 12 hour),'%Y年%m月%d日%H时') as some_hours
+        union all
+        SELECT DATE_FORMAT(DATE_ADD(#{date}, interval 13 hour),'%Y年%m月%d日%H时') as some_hours
+        union all
+        SELECT DATE_FORMAT(DATE_ADD(#{date}, interval 14 hour),'%Y年%m月%d日%H时') as some_hours
+        union all
+        SELECT DATE_FORMAT(DATE_ADD(#{date}, interval 15 hour),'%Y年%m月%d日%H时') as some_hours
+        union all
+        SELECT DATE_FORMAT(DATE_ADD(#{date}, interval 16 hour),'%Y年%m月%d日%H时') as some_hours
+        union all
+        SELECT DATE_FORMAT(DATE_ADD(#{date}, interval 17 hour),'%Y年%m月%d日%H时') as some_hours
+        union all
+        SELECT DATE_FORMAT(DATE_ADD(#{date}, interval 18 hour),'%Y年%m月%d日%H时') as some_hours
+        union all
+        SELECT DATE_FORMAT(DATE_ADD(#{date}, interval 19 hour),'%Y年%m月%d日%H时') as some_hours
+        union all
+        SELECT DATE_FORMAT(DATE_ADD(#{date}, interval 20 hour),'%Y年%m月%d日%H时') as some_hours
+        union all
+        SELECT DATE_FORMAT(DATE_ADD(#{date}, interval 21 hour),'%Y年%m月%d日%H时') as some_hours
+        union all
+        SELECT DATE_FORMAT(DATE_ADD(#{date}, interval 22 hour),'%Y年%m月%d日%H时') as some_hours
+        union all
+        SELECT DATE_FORMAT(DATE_ADD(#{date}, interval 23 hour),'%Y年%m月%d日%H时') as some_hours
+        ) as a
+
+        LEFT JOIN
+
+        (
+        select DATE_FORMAT(
+        <if test="action == 'come'">
+            start_datetime
+        </if>
+        <if test="action == 'leave'">
+            end_datetime
+        </if>,'%Y年%m月%d日%H时') as an_hour,count(*) as count_start
+        from usage_record
+        where start_datetime > #{date} and start_datetime #lt; '2020-04-01 23-59-59'
+        group by an_hour
+        ) as b
+
+        on a.some_hours = b.an_hour
+        order by a.some_hours;
+    </select>
+</mapper>

@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.kelvin.joyinternetcafe.mapper.IUserMapper">
+    <select id="getSectionBySectionId" resultType="Section">
+        select * from `section` where id = #{section_id};
+    </select>
+
+    <resultMap id="MapForUsageRecord" type="UsageRecord">
+        <id property="id" column="id"/>
+        <association property="section" column="section_id" select="getSectionBySectionId"></association>
+    </resultMap>
+
+    <!--usage_record表中可能会有一个人的多条记录（如上周三和前天的还有几天的，我们需要拿到最新的记录来计算价格）-->
+    <select id="getLatestUserRecordByUid" parameterType="int" resultMap="MapForUsageRecord">
+        select * from usage_record where uid = #{uid} and start_datetime = (select Max(start_datetime) from usage_record where uid = #{uid});
+    </select>
+
+    <!--根据规范，布尔型字段在数据库中用is_xx命名，在Java类中用xx命名-->
+    <resultMap id="MapForUser" type="User">
+        <id property="id" column="id"/>
+        <!--根据规范，布尔型字段在数据库中用is_xx命名，在Java类中用xx命名-->
+        <result property="member" column="is_member"></result>
+        <result property="online" column="is_online"></result>
+        <association property="latestUserRecord" column="id" select="getLatestUserRecordByUid"></association>
+    </resultMap>
+
+    <!--查询user，若参数为true则查询在线的用户，若参数为false则查询离线用户，无参数则查询所有用户-->
+    <select id="selectUser" resultMap="MapForUser">
+        select * from `user`
+        <where>
+            <if test="online != null">
+                is_online = #{online}
+            </if>
+        </where>
+    </select>
+
+    <!--查询该身份证号是否已被注册-->
+    <select id="isRegistered" resultType="User">
+        select * from `user` where identity_number = #{identity_number};
+    </select>
+
+    <!--用户注册-->
+    <insert id="userRegister">
+        insert into `user`(identity_number,`name`,password,balance,register_date,is_member,is_online) values (#{identityNumber},#{name},#{password},#{balance},now(),1,0);
+    </insert>
+
+    <!--按会员与非会员分组 统计在线人数-->
+    <select id="countOnlineUser" resultType="int">
+        select count(*) from user GROUP BY is_member;
+    </select>
+
+    <update id="updateOnline">
+        update user
+        set is_online = abs(is_online-1)
+        where id = #{id};
+    </update>
+
+    <update id="updateHours">
+        update usage_record
+			set `hours` = TIMESTAMPDIFF(MINUTE,start_datetime,end_datetime)/60
+			where uid = #{uid}
+			and start_datetime =
+            (SELECT * from (select max(start_datetime) from usage_record where uid = #{uid}) as t1 );
+    </update>
+
+    <update id="updateUserBalance">
+        update `user`
+        set balance = balance + #{money}
+        where identity_number = #{idNumber}
+    </update>
+</mapper>
